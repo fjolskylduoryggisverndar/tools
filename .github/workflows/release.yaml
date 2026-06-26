@@ -35,11 +35,13 @@ jobs:
           cd sing-geoip
           GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o "$GITHUB_WORKSPACE/sing-geoip-linux-amd64" .
 
-      - name: Resolve build Go version
+      - name: Resolve release version from build Go version
         id: go
-        run: echo "version=$(go env GOVERSION)" >> "$GITHUB_OUTPUT"
+        run: |
+          gover="$(go env GOVERSION)"          # e.g. go1.26.4
+          echo "version=v${gover#go}" >> "$GITHUB_OUTPUT"   # e.g. v1.26.4
 
-      - name: Publish release tagged with the build Go version
+      - name: Publish release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.go.outputs.version }}
@@ -48,6 +50,6 @@ jobs:
           gh release create "$TAG" \
             --title "$TAG" \
             --latest \
-            --notes "Prebuilt linux/amd64 binaries of the sing-geoip / sing-geosite parsers, built with $TAG. Consumed by the rules repo CI." \
+            --notes "Prebuilt linux/amd64 binaries of the sing-geoip / sing-geosite parsers, built with $(go env GOVERSION). Consumed by the rules repo CI." \
             sing-geosite-linux-amd64 \
             sing-geoip-linux-amd64
