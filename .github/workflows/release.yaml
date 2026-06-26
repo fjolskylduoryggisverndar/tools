@@ -15,12 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: stable
+          go-version: "1.26"
 
       - name: Build sing-geosite
         run: |
@@ -32,13 +32,19 @@ jobs:
           cd sing-geoip
           GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o "$GITHUB_WORKSPACE/sing-geoip-linux-amd64" .
 
-      - name: Publish "latest" release
+      - name: Resolve build Go version
+        id: go
+        run: echo "version=$(go env GOVERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Publish release tagged with the build Go version
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.go.outputs.version }}
         run: |
-          gh release delete latest --yes --cleanup-tag || true
-          gh release create latest \
-            --title "Latest binaries" \
-            --notes "Prebuilt linux/amd64 binaries of the sing-geoip / sing-geosite parsers. Consumed by the rules repo CI." \
+          gh release delete "$TAG" --yes --cleanup-tag || true
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --latest \
+            --notes "Prebuilt linux/amd64 binaries of the sing-geoip / sing-geosite parsers, built with $TAG. Consumed by the rules repo CI." \
             sing-geosite-linux-amd64 \
             sing-geoip-linux-amd64
