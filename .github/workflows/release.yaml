@@ -21,6 +21,9 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: "1.26"
+          cache-dependency-path: |
+            sing-geosite/go.sum
+            sing-geoip/go.sum
 
       - name: Build sing-geosite
         run: |
