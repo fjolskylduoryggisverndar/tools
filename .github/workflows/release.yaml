@@ -1,0 +1,44 @@
+name: Release binaries
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Build sing-geosite
+        run: |
+          cd sing-geosite
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o "$GITHUB_WORKSPACE/sing-geosite-linux-amd64" .
+
+      - name: Build sing-geoip
+        run: |
+          cd sing-geoip
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o "$GITHUB_WORKSPACE/sing-geoip-linux-amd64" .
+
+      - name: Publish "latest" release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest \
+            --title "Latest binaries" \
+            --notes "Prebuilt linux/amd64 binaries of the sing-geoip / sing-geosite parsers. Consumed by the rules repo CI." \
+            sing-geosite-linux-amd64 \
+            sing-geoip-linux-amd64

@@ -1,0 +1,14 @@
+# Generated rule-set / db artifacts
+rule-set/
+*.db
+
+# Built binaries (CI artifacts at repo root)
+/sing-geosite-linux-amd64
+/sing-geoip-linux-amd64
+
+# Local `go build .` output inside the module dirs
+/sing-geosite/sing-geosite
+/sing-geoip/sing-geoip
+
+# Local Claude Code guidance (not tracked)
+CLAUDE.md
